@@ -72,7 +72,7 @@ angular.module('bitclip.receiveFactory', [])
     for (var i = 0, l = allAddresses.length; i < l; i++) {
       result[i] = {
         address: allAddresses[i],
-        balance: allBalances[i].balance / 100000000
+        balance: allBalances[i].balance
       };
     }
     deferred.resolve(result);

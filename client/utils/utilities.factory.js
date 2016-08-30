@@ -85,31 +85,41 @@ angular.module('bitclip.utilitiesFactory', [])
   // Accepts array of addresses
   var getBalances = function(addresses) {
     var deferred = $q.defer();
-    isMainNet().then(function(bool) {
-      var baseUrl = 'https://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com/api/addr/';
-      var requestString = '';
-      if (addresses.length > 1) {
 
-        // gonna have to do something about this
-        requestString += addresses.join('&addresses=');
-
-      } else if (addresses.length === 1) {
-        if (!addresses[0]) {
-          deferred.resolve([]);
-          return deferred.promise;
-        }
-        requestString = addresses[0];
-      } else {
+    // return promise if there's no addresses
+    if (addresses.length === 1) {
+      if (!addresses[0]) {
         deferred.resolve([]);
         return deferred.promise;
       }
-      baseUrl += requestString;
+    } else if (addresses.length === 0) {
+      deferred.resolve([]);
+      return deferred.promise;
+    }
+
+    var balances = [];
+    for (var i = 0; i < addresses.length; i++) {
+      balances[i] = getBalance(addresses[i]);
+    }
+
+    $q.all(balances).then(function(result) {
+      deferred.resolve(result);
+    })
+
+    return deferred.promise;
+  };
+
+  // Query Insight API for balance for a single address
+  var getBalance = function(address) {
+    var deferred = $q.defer();
+    isMainNet().then(function(bool) {
+      var baseUrl = 'https://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com/api/addr/' + address;
       httpGet(baseUrl, function(obj) {
-        deferred.resolve([obj]);
+        deferred.resolve(obj);
       });
     });
     return deferred.promise;
-  };
+  }
 
   // Tracks sockets used to fetch balance information for current address
   var openSocketsList = [];
