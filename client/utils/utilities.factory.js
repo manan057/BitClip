@@ -86,10 +86,13 @@ angular.module('bitclip.utilitiesFactory', [])
   var getBalances = function(addresses) {
     var deferred = $q.defer();
     isMainNet().then(function(bool) {
-      var baseUrl = 'http://' + (bool ? 'mainnet' : 'testnet') + '.helloblock.io/v1/addresses?addresses=';
+      var baseUrl = 'https://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com/api/addr/';
       var requestString = '';
       if (addresses.length > 1) {
+
+        // gonna have to do something about this
         requestString += addresses.join('&addresses=');
+
       } else if (addresses.length === 1) {
         if (!addresses[0]) {
           deferred.resolve([]);
@@ -102,7 +105,7 @@ angular.module('bitclip.utilitiesFactory', [])
       }
       baseUrl += requestString;
       httpGet(baseUrl, function(obj) {
-        deferred.resolve(obj.data.addresses);
+        deferred.resolve([obj]);
       });
     });
     return deferred.promise;
