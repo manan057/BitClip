@@ -11,9 +11,10 @@ angular.module('bitclip.headerController', [])
         } else {
           $scope.balanceMessage = 'Bal: ' + balance + ' BTC';
           // Create socket to fetch updated balance information
-          Utilities.getLiveBalanceForCurrentAddress(function(err, data) {
-            $scope.balanceMessage = 'Bal: ' + data.address.balance + ' BTC';
-          });
+          // DISABLED WHILE I FIX IT
+          // Utilities.getLiveBalanceForCurrentAddress(function(err, data) {
+          //   $scope.balanceMessage = 'Bal: ' + data.address.balance + ' BTC';
+          // });
         }
       });
     };
