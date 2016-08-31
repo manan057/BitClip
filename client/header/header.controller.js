@@ -9,10 +9,10 @@ angular.module('bitclip.headerController', [])
         if (typeof balance === 'string') {
           $scope.balanceMessage = balance;
         } else {
-          $scope.balanceMessage = 'Bal: ' + balance / 100000000 + ' BTC';
+          $scope.balanceMessage = 'Bal: ' + balance + ' BTC';
           // Create socket to fetch updated balance information
           Utilities.getLiveBalanceForCurrentAddress(function(err, data) {
-            $scope.balanceMessage = 'Bal: ' + data.address.balance / 100000000 + ' BTC';
+            $scope.balanceMessage = 'Bal: ' + data.address.balance + ' BTC';
           });
         }
       });

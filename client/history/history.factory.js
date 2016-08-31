@@ -8,7 +8,7 @@ angular.module('bitclip.historyFactory', [])
     //determine what network is running (test or main)
     //then retrieve transaction data
     Utilities.isMainNet().then(function(bool) {
-      var baseUrl = 'http://' + (bool ? 'mainnet' : 'testnet') + '.helloblock.io/v1/addresses/';
+      var baseUrl = 'http://' + (bool ? 'insight' : 'test-insight') + '.helloblock.io/v1/addresses/';
       var requestString = currentAddress;
       baseUrl += requestString;
       baseUrl += '/transactions?limit=15';

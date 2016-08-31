@@ -125,27 +125,43 @@ angular.module('bitclip.utilitiesFactory', [])
   var openSocketsList = [];
 
   var openSocketToGetLiveBalance = function(url, currentAddress, callback) {
-    var ws = new WebSocket(url);
-    openSocketsList.push(ws);
-    ws.onopen = function() {
-      ws.send(JSON.stringify({
-        'op': 'subscribe',
-        'channel': 'addresses',
-        'filters': [currentAddress]
-      }));
+    room = 'bitcoind/addresstxid';
 
-      ws.onmessage = function(e) {
-        var data = JSON.parse(e.data);
-        if (data.data) {
-          callback(null, data.data);
-        }
-      };
-
-      ws.onerror = function(err) {
-        callback(err.message, null);
-      };
-    };
+    var socket = io(url);
+    socket.on('connect', function() {
+      socket.emit('subscribe', room, [currentAddress]);
+      console.log('Connected to room: ', room);
+    });
+    socket.on(room, function(data) {
+      console.log("New transaction received: " + data)
+      // data looks like { address: , txid: }
+    })
   };
+
+
+  // var openSocketToGetLiveBalance = function(url, currentAddress, callback) {
+  //   var ws = new WebSocket(url);
+  //   openSocketsList.push(ws);
+  //   ws.onopen = function() {
+  //     ws.send(JSON.stringify({
+  //       'op': 'subscribe',
+  //       'channel': 'addresses',
+  //       'filters': [currentAddress]
+  //     }));
+
+  //     ws.onmessage = function(e) {
+  //       var data = JSON.parse(e.data);
+  //       if (data.data) {
+  //         callback(null, data.data);
+  //       }
+  //     };
+
+  //     ws.onerror = function(err) {
+  //       callback(err.message, null);
+  //     };
+  //   };
+  // };
+
 
   var closeExistingSocketsPermanently = function() {
     openSocketsList.forEach(function(websocket) {
@@ -158,7 +174,7 @@ angular.module('bitclip.utilitiesFactory', [])
   var getLiveBalanceForCurrentAddress = function(callback) {
     isMainNet().then(function(bool) {
       getCurrentAddress().then(function(currentAddress) {
-        var url = 'wss://socket-' + (bool ? 'mainnet' : 'testnet') + '.helloblock.io';
+        var url = 'wss://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com';
         closeExistingSocketsPermanently();
         openSocketToGetLiveBalance(url, currentAddress, callback);
       });
