@@ -1,7 +1,8 @@
 angular.module('bitclip.sendFactory', [])
 
-.factory('TxBuilder', ['$q', '$rootScope', function($q, $rootScope) {
+.factory('TxBuilder', ['$q', '$rootScope', '$http', 'Utilities', function($q, $rootScope, $http, Utilities) {
   //Sends transaction data through helloblock
+  // Values must be in satoshis.
   var sendTransaction = function(privateKeyWIF, transactionObj, isMainNet) {
     var deferred = $q.defer();
     var networkVar = {
@@ -13,28 +14,25 @@ angular.module('bitclip.sendFactory', [])
     var ecKeyAddress = ecKey.pub.getAddress(network).toString();
     var toAddress = transactionObj.destination;
     var txFee = isMainNet ? 10000 : 0;
-    var txTargetValue = transactionObj.amount * 100000000;
+    var txTargetValue = transactionObj.amount * 1000000000;
 
     //Sets transaction bitcoin value (send value + transaction fee)
-    helloblocktx.addresses.getUnspents(ecKeyAddress, {
-      value: txTargetValue + txFee
-    }, function(err, res, unspents) {
-      if (err) {
-        deferred.reject(err);
-        $rootScope.$apply();
-        return deferred.promise;
-      };
 
+    getUnspents(ecKeyAddress, isMainNet).then(function(unspents) {
       //sets change amount for transaction
       var tx = new bitcoin.Transaction();
       var totalUnspentsValue = 0;
-      unspents.forEach(function(unspent) {
-        tx.addInput(unspent.txHash, unspent.index);
-        totalUnspentsValue += unspent.value;
+      unspents.forEach(function(unspent, index) {
+        tx.addInput(unspent.txid, index);
+        totalUnspentsValue += unspent.satoshis;
       });
       tx.addOutput(toAddress, txTargetValue);
 
       var txChangeValue = totalUnspentsValue - txTargetValue - txFee;
+      if (txChangeValue <= 0) {
+        deferred.reject('Not enough bitcoins in address %s', ecKeyAddress);
+      }
+
       tx.addOutput(ecKeyAddress, txChangeValue);
       tx.ins.forEach(function(input, index) {
         tx.sign(index, ecKey);
@@ -42,18 +40,105 @@ angular.module('bitclip.sendFactory', [])
 
       //Sends off transaction
       var rawTxHex = tx.toHex();
-      helloblocktx.transactions.propagate(rawTxHex, function(err, res, tx) { 
-        if (err) {
-          deferred.reject(err);
-          $rootScope.$apply();
-        } else if (tx) {
+
+      propagateTx(rawTxHex, isMainNet).then(function(data) {
+        if (data.txid) {
           deferred.resolve('Transaction successfully propagated.');
           $rootScope.$apply();
+        } else {
+          console.log('Transaction propagation failed: %s', data);
+          deferred.reject('Transaction propagation failed: %s', data)
         }
+      }, function(error) {
+          deferred.reject('Transaction propagation failed: %s', error)
+      });
+
+    }, function(error) {
+      deferred.reject(error)
+      $rootScope.$apply();
+      return deferred.promise;
+    });
+
+
+    // helloblocktx.addresses.getUnspents(ecKeyAddress, {
+    //   value: txTargetValue + txFee
+    // }, function(err, res, unspents) {
+    //   if (err) {
+    //     deferred.reject(err);
+    //     $rootScope.$apply();
+    //     return deferred.promise;
+    //   };
+
+    //   //sets change amount for transaction
+    //   var tx = new bitcoin.Transaction();
+    //   var totalUnspentsValue = 0;
+    //   unspents.forEach(function(unspent) {
+    //     tx.addInput(unspent.txHash, unspent.index);
+    //     totalUnspentsValue += unspent.value;
+    //   });
+    //   tx.addOutput(toAddress, txTargetValue);
+
+    //   var txChangeValue = totalUnspentsValue - txTargetValue - txFee;
+    //   tx.addOutput(ecKeyAddress, txChangeValue);
+    //   tx.ins.forEach(function(input, index) {
+    //     tx.sign(index, ecKey);
+    //   });
+
+    //   //Sends off transaction
+    //   var rawTxHex = tx.toHex();
+    //   helloblocktx.transactions.propagate(rawTxHxe, function(err, res, tx) { 
+    //     if (err) {
+    //       deferred.reject(err);
+    //       $rootScope.$apply();
+    //     } else if (tx) {
+    //       deferred.resolve('Transaction successfully propagated.');
+    //       $rootScope.$apply();
+    //     }
+    //   });
+    // });
+    return deferred.promise;
+  };
+
+  var propagateTx = function(rawTxHex, isMainNet) {
+    var deferred = $q.defer();
+
+    var url = 'https://' + (isMainNet ? 'insight' : 'test-insight') + '.bitpay.com/api/tx/send';
+    $http.post(url, {rawtx: rawTxHex})
+      .success(function(data) {
+        deferred.resolve(data);
+      })
+      .error(function(err) {
+        deferred.reject(err);
+      })
+
+    return deferred.promise;
+  }
+
+  var getUnspents = function(address, isMainNet) {
+    var deferred = $q.defer();
+
+    var url = 'https://' + (isMainNet ? 'insight' : 'test-insight') + '.bitpay.com/api/addr/' + address + '/utxo';
+    $http.get(url)
+      .success(function(data) {
+        deferred.resolve(data);
+      })
+      .error(function(data, status, headers, config) {
+        deferred.reject('Couldn\'t get unspents: ', data, status, headers, config);
+      });
+
+    return deferred.promise;
+  }
+
+  var getBalance = function(address) {
+    var deferred = $q.defer();
+    isMainNet().then(function(bool) {
+      var baseUrl = 'https://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com/api/addr/' + address;
+      httpGet(baseUrl, function(obj) {
+        deferred.resolve(obj);
       });
     });
     return deferred.promise;
-  };
+  }
 
   //Varifies if address is valid
   var isValidAddress = function(address) {
