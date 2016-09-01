@@ -41,10 +41,11 @@ angular.module('bitclip.sendFactory', [])
         if (data.txid) {
           deferred.resolve('Transaction successfully propagated.');
         } else {
-          console.log('Transaction propagation failed: %s', data);
-          deferred.reject('Transaction propagation failed: %s', data)
+          console.log('Transaction propagation failed, txid in return: %s', data);
+          deferred.reject({message: data})
         }
       }, function(error) {
+          console.log('Propagration failed: ', error)
           deferred.reject({message: error});
       });
 

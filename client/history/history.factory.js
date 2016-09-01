@@ -8,12 +8,11 @@ angular.module('bitclip.historyFactory', [])
     //determine what network is running (test or main)
     //then retrieve transaction data
     Utilities.isMainNet().then(function(bool) {
-      var baseUrl = 'http://' + (bool ? 'insight' : 'test-insight') + '.helloblock.io/v1/addresses/';
+      var baseUrl = 'https://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com/api/txs/?address=';
       var requestString = currentAddress;
       baseUrl += requestString;
-      baseUrl += '/transactions?limit=15';
       Utilities.httpGet(baseUrl, function(obj) {
-        deferred.resolve(obj.data.transactions);
+        deferred.resolve(obj.txs);
       });
     });
     return deferred.promise;
@@ -40,12 +39,13 @@ angular.module('bitclip.historyFactory', [])
       outputs: []
     };
 
-    transObj.inputs.forEach(function(tx) {
-      addressObj.inputs.push([tx.address, tx.value, transObj.estimatedTxTime]);
+    transObj.vin.forEach(function(tx) {
+      addressObj.inputs.push([tx.addr, tx.valueSat, transObj.time]);
     });
 
-    transObj.outputs.forEach(function(tx) {
-      addressObj.outputs.push([tx.address, tx.value, transObj.estimatedTxTime]);
+    transObj.vout.forEach(function(tx) {
+      console.log('Vout address: %s', tx.scriptPubKey.addresses[0]);
+      addressObj.outputs.push([tx.scriptPubKey.addresses[0], tx.value*100000000, transObj.time]);
     });
     
     //sets values of transaction relative to user.
