@@ -8,49 +8,44 @@ angular.module('bitclip.sendFactory', [])
     var networkVar = {
       network: isMainNet ? 'mainnet' : 'testnet'
     };
-    var helloblocktx = new helloblock(networkVar);
     var ecKey = bitcoin.ECKey.fromWIF(privateKeyWIF);
     var network = isMainNet ? bitcoin.networks.bitcoin : bitcoin.networks.testnet;
     var ecKeyAddress = ecKey.pub.getAddress(network).toString();
     var toAddress = transactionObj.destination;
-    var txFee = isMainNet ? 10000 : 0;
-    var txTargetValue = transactionObj.amount * 1000000000;
+    var txFee = isMainNet ? 10000 : 10;
+    var txTargetValue = transactionObj.amount * 100000000;
 
     //Sets transaction bitcoin value (send value + transaction fee)
 
     getUnspents(ecKeyAddress, isMainNet).then(function(unspents) {
       //sets change amount for transaction
-      var tx = new bitcoin.Transaction();
+      var tx = new bitcoin.TransactionBuilder();
       var totalUnspentsValue = 0;
-      unspents.forEach(function(unspent, index) {
-        tx.addInput(unspent.txid, index);
+      unspents.forEach(function(unspent) {
+        tx.addInput(unspent.txid, 2);
         totalUnspentsValue += unspent.satoshis;
       });
       tx.addOutput(toAddress, txTargetValue);
 
       var txChangeValue = totalUnspentsValue - txTargetValue - txFee;
-      if (txChangeValue <= 0) {
-        deferred.reject('Not enough bitcoins in address %s', ecKeyAddress);
-      }
 
       tx.addOutput(ecKeyAddress, txChangeValue);
-      tx.ins.forEach(function(input, index) {
+      tx.tx.ins.forEach(function(input, index) {
         tx.sign(index, ecKey);
       });
 
       //Sends off transaction
-      var rawTxHex = tx.toHex();
+      var rawTxHex = tx.build().toHex();
 
       propagateTx(rawTxHex, isMainNet).then(function(data) {
         if (data.txid) {
           deferred.resolve('Transaction successfully propagated.');
-          $rootScope.$apply();
         } else {
           console.log('Transaction propagation failed: %s', data);
           deferred.reject('Transaction propagation failed: %s', data)
         }
       }, function(error) {
-          deferred.reject('Transaction propagation failed: %s', error)
+          deferred.reject({message: error});
       });
 
     }, function(error) {
