@@ -20,15 +20,25 @@ angular.module('bitclip.historyFactory', [])
 
   //determines if the current address is in an array and returns its values if true
   var isContainedInArrayMatrix = function(inputOrOutputMatrix, current) {
+    var returnedTx = [];
     for (var i = 0, l = inputOrOutputMatrix.length; i < l; i++) {
       var returnedAddress = inputOrOutputMatrix[i][0];
       var returnedValue = inputOrOutputMatrix[i][1];
       var txTime = inputOrOutputMatrix[i][2];
       if (current === returnedAddress) {
-        return [returnedAddress, returnedValue, txTime];
+        if (!returnedTx[0]) {
+          returnedTx = [returnedAddress, returnedValue, txTime];
+        } else {
+          returnedTx[1] += returnedValue;
+        }
       }
     }
-    return false;
+
+    if (returnedTx[0]) {
+      return returnedTx
+    } else {
+      return false;
+    }
   };  
 
   //determines if transaction was inbound or outbound
