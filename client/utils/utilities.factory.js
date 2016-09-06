@@ -124,59 +124,39 @@ angular.module('bitclip.utilitiesFactory', [])
   // Tracks sockets used to fetch balance information for current address
   var openSocketsList = [];
 
-  var openSocketToGetLiveBalance = function(url, currentAddress, callback) {
+  // Tracks incoming unconfirmed transactions for current address
+  var unconfirmedTransactions = [];
+
+  var openSocketToGetLiveBalance = function(url, currentAddress) {
     room = 'bitcoind/addresstxid';
 
     var socket = io(url);
     socket.on('connect', function() {
       socket.emit('subscribe', room, [currentAddress]);
-      console.log('Connected to room: ', room);
     });
     socket.on(room, function(data) {
-      console.log("New transaction received: " + data)
+      console.log('Transaction detected, txid: %s', data.txid)
+      unconfirmedTransactions.push(data);
       // data looks like { address: , txid: }
     })
+
+    openSocketsList.push(socket)
   };
 
 
-  // var openSocketToGetLiveBalance = function(url, currentAddress, callback) {
-  //   var ws = new WebSocket(url);
-  //   openSocketsList.push(ws);
-  //   ws.onopen = function() {
-  //     ws.send(JSON.stringify({
-  //       'op': 'subscribe',
-  //       'channel': 'addresses',
-  //       'filters': [currentAddress]
-  //     }));
-
-  //     ws.onmessage = function(e) {
-  //       var data = JSON.parse(e.data);
-  //       if (data.data) {
-  //         callback(null, data.data);
-  //       }
-  //     };
-
-  //     ws.onerror = function(err) {
-  //       callback(err.message, null);
-  //     };
-  //   };
-  // };
-
-
   var closeExistingSocketsPermanently = function() {
-    openSocketsList.forEach(function(websocket) {
-      websocket.onclose = function() {};
-      websocket.close();
+    openSocketsList.forEach(function(socket) {
+      socket.disconnect();
     });
     openSocketsList.splice(0, openSocketsList.length);
   };
 
-  var getLiveBalanceForCurrentAddress = function(callback) {
+  var getLiveBalanceForCurrentAddress = function() {
     isMainNet().then(function(bool) {
       getCurrentAddress().then(function(currentAddress) {
         var url = 'wss://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com';
         closeExistingSocketsPermanently();
-        openSocketToGetLiveBalance(url, currentAddress, callback);
+        openSocketToGetLiveBalance(url, currentAddress);
       });
     });
   };
@@ -199,6 +179,57 @@ angular.module('bitclip.utilitiesFactory', [])
       });
   };
 
+  var monitorForNewTransactions = function(callback) {
+    isMainNet().then(function(bool) {
+      var socket = io('wss://' + (bool ? 'insight' : 'test-insight') + '.bitpay.com');
+      var room = 'inv';
+
+      socket.on('connect', function() {
+        socket.emit('subscribe', room);
+      });
+      socket.on('block', function(data) {
+        if (unconfirmedTransactions.length) {
+          getBlockAndCheckForTx(data, bool).then(function(obj) {
+            if (obj) {
+              getCurrentAddress().then(function(currentAddress) {
+                getBalance(currentAddress).then(function(obj) {
+                  callback(obj);
+                })
+              })
+            }
+          })
+        }
+      })
+    })
+  }
+
+  var getBlockAndCheckForTx = function(blockHash, isMainNet) {
+    var deferred = $q.defer();
+    var txInBlock;
+
+    httpGet('https://' + (isMainNet ? 'insight' : 'test-insight') + '.bitpay.com/api/block/' + blockHash, function(obj) {
+      if (obj.tx) {
+        obj.tx.forEach(function(transaction) {
+          for (var i = 0; i < unconfirmedTransactions.length; i++) {
+            if (transaction = unconfirmedTransactions[i].txid) {
+              txInBlock = true;
+              unconfirmedTransactions.splice(i,1);
+              break;
+            }
+          }
+        });
+
+        if (txInBlock) {
+          deferred.resolve(true);
+        } else {
+          deferred.resolve(false);
+        }
+      }
+    });
+
+    return deferred.promise
+  }
+
   return {
     initialize: initialize,
     isMainNet: isMainNet,
@@ -209,6 +240,7 @@ angular.module('bitclip.utilitiesFactory', [])
     getBalances: getBalances,
     openSocketsList: openSocketsList,
     getLiveBalanceForCurrentAddress: getLiveBalanceForCurrentAddress,
-    getTestNetCoins: getTestNetCoins
+    getTestNetCoins: getTestNetCoins,
+    monitorForNewTransactions: monitorForNewTransactions
   };
 }]);

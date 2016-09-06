@@ -12,12 +12,19 @@ angular.module('bitclip.headerController', [])
           $scope.balanceMessage = 'Bal: ' + balance + ' BTC';
           // Create socket to fetch updated balance information
           // DISABLED WHILE I FIX IT
-          // Utilities.getLiveBalanceForCurrentAddress(function(err, data) {
-          //   $scope.balanceMessage = 'Bal: ' + data.address.balance + ' BTC';
-          // });
+          Utilities.getLiveBalanceForCurrentAddress();
         }
       });
     };
+
+    $scope.updateBalanceOnConfirmedTransaction = function() {
+      Utilities.monitorForNewTransactions(function(data) {
+        $scope.balanceMessage = 'Bal: ' + data.balance + ' BTC';
+      });
+    }
+    $scope.updateBalanceOnConfirmedTransaction();
+
+
     // If current address is changed, we reset the balance message and generate a new socket
     $rootScope.$watch('currentAddress', $scope.setBalance);
 
@@ -37,5 +44,9 @@ angular.module('bitclip.headerController', [])
     $scope.toggleNetwork = function() {
       Header.setNetwork(!$rootScope.isMainNet, $scope.getNetworkStatus);
     };
+
+    $scope.updateBalance = function(balance) {
+      $scope.balanceMessage = 'Bal: ' + balance + ' BTC';
+    }
   });
 }]);
