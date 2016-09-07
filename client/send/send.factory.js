@@ -22,7 +22,7 @@ angular.module('bitclip.sendFactory', [])
       var tx = new bitcoin.TransactionBuilder();
       var totalUnspentsValue = 0;
       unspents.forEach(function(unspent) {
-        tx.addInput(unspent.txid, 2);
+        tx.addInput(unspent.txid, unspent.vout);
         totalUnspentsValue += unspent.satoshis;
       });
       tx.addOutput(toAddress, txTargetValue);
@@ -56,42 +56,6 @@ angular.module('bitclip.sendFactory', [])
     });
 
 
-    // helloblocktx.addresses.getUnspents(ecKeyAddress, {
-    //   value: txTargetValue + txFee
-    // }, function(err, res, unspents) {
-    //   if (err) {
-    //     deferred.reject(err);
-    //     $rootScope.$apply();
-    //     return deferred.promise;
-    //   };
-
-    //   //sets change amount for transaction
-    //   var tx = new bitcoin.Transaction();
-    //   var totalUnspentsValue = 0;
-    //   unspents.forEach(function(unspent) {
-    //     tx.addInput(unspent.txHash, unspent.index);
-    //     totalUnspentsValue += unspent.value;
-    //   });
-    //   tx.addOutput(toAddress, txTargetValue);
-
-    //   var txChangeValue = totalUnspentsValue - txTargetValue - txFee;
-    //   tx.addOutput(ecKeyAddress, txChangeValue);
-    //   tx.ins.forEach(function(input, index) {
-    //     tx.sign(index, ecKey);
-    //   });
-
-    //   //Sends off transaction
-    //   var rawTxHex = tx.toHex();
-    //   helloblocktx.transactions.propagate(rawTxHxe, function(err, res, tx) { 
-    //     if (err) {
-    //       deferred.reject(err);
-    //       $rootScope.$apply();
-    //     } else if (tx) {
-    //       deferred.resolve('Transaction successfully propagated.');
-    //       $rootScope.$apply();
-    //     }
-    //   });
-    // });
     return deferred.promise;
   };
 

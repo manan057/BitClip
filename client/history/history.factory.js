@@ -54,7 +54,6 @@ angular.module('bitclip.historyFactory', [])
     });
 
     transObj.vout.forEach(function(tx) {
-      console.log('Vout address: %s', tx.scriptPubKey.addresses[0]);
       addressObj.outputs.push([tx.scriptPubKey.addresses[0], tx.value*100000000, transObj.time]);
     });
     

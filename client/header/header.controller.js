@@ -45,8 +45,5 @@ angular.module('bitclip.headerController', [])
       Header.setNetwork(!$rootScope.isMainNet, $scope.getNetworkStatus);
     };
 
-    $scope.updateBalance = function(balance) {
-      $scope.balanceMessage = 'Bal: ' + balance + ' BTC';
-    }
   });
 }]);
