@@ -3,7 +3,7 @@ angular.module('bitclip.marketFactory', [])
 .factory('Market', ['$http', function($http) {
   //Query's database for market data
   var getGraphData = function(hours, callback) {
-    var url = 'http://bitscrape.azurewebsites.net/api/marketdata'; 
+    var url = 'http://api.bitclip.me/api/marketdata'; 
     var dataObj = {
       timePeriod: hours * 3600000,
       time: new Date().getTime()
