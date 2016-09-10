@@ -80,7 +80,7 @@ describe('Market Factory', function () {
     var expectedResult = {"timePeriod":86400000,"time":1412901968055,"transactions":[{"key":"bitstamp","values":[[1412816359007,354.84979334118697]]}],"stdDeviation":9.601723573401443,"vwap":367.1599991515436,"max":395.25,"min":343,"volume":114680.90688799924};
 
     var result = {"timePeriod":86400000,"time":1412901968055,"transactions":[{"key":"bitstamp","values":[[1412816359007,354.84979334118697]]}],"stdDeviation":9.601723573401443,"vwap":367.1599991515436,"max":395.25,"min":343,"volume":114680.90688799924};
-    $httpBackend.when('GET', "http://bitscrape.azurewebsites.net/api/marketdata?time=" + new Date().getTime() + "&timePeriod=86400000")
+    $httpBackend.when('GET', "http://api.bitclip.me/api/marketdata?time=" + new Date().getTime() + "&timePeriod=86400000")
     .respond(JSON.stringify(result));
 
     Market.getGraphData(24, function(data){

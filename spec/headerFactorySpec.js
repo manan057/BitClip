@@ -21,14 +21,14 @@ describe('Unit: headerFactory', function () {
 
   $httpBackend.when('GET','http://testnet.helloblock.io/v1/addresses?addresses=mieyV4Y8ba87pZYJKsJRz8qcZP4b2HvWLf')
   .respond({
-    "status":"success",
-    "data":{
-      "addresses":[
-        { "balance":224880000,
+       "balance":224880000,
           "confirmedBalance":224880000 
-        }
-      ]
-    }
+  });
+
+  $httpBackend.when('GET','https://test-insight.bitpay.com/api/addr/mieyV4Y8ba87pZYJKsJRz8qcZP4b2HvWLf')
+  .respond({
+    "balance": 2.2488, 
+    "balanceSat":224880000,
   });
 
   /****************************************************
@@ -104,7 +104,7 @@ describe('Unit: headerFactory', function () {
   it('getBalanceForCurrentAddress should make GET request to HelloBlock and return correct balance', function (done) {
     Header.getBalanceForCurrentAddress()
     .then(function(balance){
-      expect(balance).to.equal(224880000);
+      expect(balance).to.equal(2.2488);
       done();
     })
     $httpBackend.flush();

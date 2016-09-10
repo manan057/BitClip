@@ -18,28 +18,16 @@ describe('Unit: headerController', function () {
     Endpoint: https://helloblock.io/docs/ref#addresses-batch
   ***********************************************************/
 
-    $httpBackend.when('GET','http://testnet.helloblock.io/v1/addresses?addresses=mieyV4Y8ba87pZYJKsJRz8qcZP4b2HvWLf')
+    $httpBackend.when('GET','https://test-insight.bitpay.com/api/addr/mieyV4Y8ba87pZYJKsJRz8qcZP4b2HvWLf')
     .respond({
-      "status":"success",
-      "data":{
-        "addresses":[
-          { "balance":224880000,
-            "confirmedBalance":224880000 
-          }
-        ]
-      }
+      "balance": 2.2488, 
+      "balanceSat":224880000,
     });
 
-    $httpBackend.when('GET','http://mainnet.helloblock.io/v1/addresses?addresses=1GuxzXBZaFfjpGgGEFVt9NBGF9mParcPX2')
+    $httpBackend.when('GET','https://insight.bitpay.com/api/addr/1GuxzXBZaFfjpGgGEFVt9NBGF9mParcPX2')
     .respond({
-      "status":"success",
-      "data":{
-        "addresses":[
-          { "balance":0,
-            "confirmedBalance":0 
-          }
-        ]
-      }
+      "balance":0,
+      "balanceSat":0,
     });
 
     $httpBackend.when('GET','send/send.tpl.html')

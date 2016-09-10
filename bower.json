@@ -14,7 +14,7 @@
   "dependencies": {
     "angular": "~1.2.25",
     "angular-route": "^1.2.18",
-    "angular-mocks": "^1.2.18",
+    "angular-mocks": "1.2.30",
     "angular-ui-router": "~0.2.11",
     "font-awesome": "~4.2.0",
     "jquery": "~2.1.1",
@@ -26,5 +26,5 @@
   },
   "resolutions": {
     "d3": "~3.4.11"
-  }
+  },
 }

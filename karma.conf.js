@@ -24,6 +24,7 @@ module.exports = function(config) {
       'client/lib/d3/d3.min.js',
       'client/lib/nvd3/nv.d3.min.js',
       'client/lib/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.min.js',
+      'client/lib/socket.io/socket.io.js',
 
       // our app code
       'client/receive/*.js',
