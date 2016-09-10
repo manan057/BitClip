@@ -16,6 +16,20 @@ describe('Unit: sendFactory - TxBuilder', function () {
     and getters.
   *****************************************************/
 
+    $httpBackend.when('GET', 'https://test-insight.bitpay.com/api/addr/moJvQo6j1uDPXxntNpfFHXcAjwLvJ72sDV/utxo')
+      .respond([
+        {
+          "address": "moJvQo6j1uDPXxntNpfFHXcAjwLvJ72sDV",
+          "txid": "40b47cef1fa2007cd5e011dc035bfdea371f49a0162d4c6facdc6b85f260321b",
+          "vout": 1,
+          "scriptPubKey": "76a914557a7136ac55ef8cbecd5af74a5877b8c5f72cf088ac",
+          "amount": 0.892,
+          "satoshis": 89200000,
+          "height": 305499,
+          "confirmations": 622184
+        }
+      ]);
+
     $window.chrome = {
       storage: {
         local:{}
