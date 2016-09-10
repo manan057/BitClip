@@ -13,7 +13,7 @@ angular.module('bitclip.sendFactory', [])
     var ecKeyAddress = ecKey.pub.getAddress(network).toString();
     var toAddress = transactionObj.destination;
     var txFee = isMainNet ? 10000 : 10;
-    var txTargetValue = transactionObj.amount * 100000000;
+    var txTargetValue = parseInt(Math.round(transactionObj.amount * 100000000));
 
     //Sets transaction bitcoin value (send value + transaction fee)
 
@@ -29,25 +29,35 @@ angular.module('bitclip.sendFactory', [])
 
       var txChangeValue = totalUnspentsValue - txTargetValue - txFee;
 
-      tx.addOutput(ecKeyAddress, txChangeValue);
-      tx.tx.ins.forEach(function(input, index) {
-        tx.sign(index, ecKey);
-      });
-
-      //Sends off transaction
-      var rawTxHex = tx.build().toHex();
-
-      propagateTx(rawTxHex, isMainNet).then(function(data) {
-        if (data.txid) {
-          deferred.resolve('Transaction successfully propagated.');
-        } else {
-          console.log('Transaction propagation failed, txid in return: %s', data);
-          deferred.reject({message: data})
+      if (txChangeValue < 0) {
+        deferred.reject({message: "Wallet balance not high enough"});
+      } else {
+        if (txChangeValue > 546) {
+          // Only add the change address if the changeValue is greater than the dust threshold,
+          // otherwise the transaction will be rejected as dust. If the change is less than the 
+          // change threshold, the change will just be added to the fee.
+          tx.addOutput(ecKeyAddress, txChangeValue);
         }
-      }, function(error) {
-          console.log('Propagration failed: ', error)
-          deferred.reject({message: error});
-      });
+        tx.tx.ins.forEach(function(input, index) {
+          tx.sign(index, ecKey);
+        });
+
+        //Sends off transaction
+        var rawTxHex = tx.build().toHex();
+
+        propagateTx(rawTxHex, isMainNet).then(function(data) {
+          if (data.txid) {
+            deferred.resolve('Transaction successfully propagated.');
+          } else {
+            console.log('Transaction propagation failed, txid in return: %s', data);
+            deferred.reject({message: data})
+          }
+        }, function(error) {
+            console.log('Propagration failed: ', error)
+            deferred.reject({message: error});
+        });
+        
+      }
 
     }, function(error) {
       deferred.reject(error)
