@@ -162,13 +162,13 @@ angular.module('bitclip.utilitiesFactory', [])
   };
 
   // Add TestNet Bitcoins for given address
-  var getTestNetCoins = function(address, value, callback) {
+
+  var getTestNetCoins = function(address, callback) {
     $http({
       method: 'POST',
-      url: 'http://testnet.helloblock.io/v1/faucet/withdrawal',
+      url: 'http://api.bitclip.me/api/getcoins',
       data: {
-        value: value,
-        toAddress: address
+        address: address
       }
     })
       .success(function(data, status, headers, config) {

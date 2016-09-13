@@ -16,9 +16,12 @@ angular.module('bitclip.receiveFactory', [])
       obj[location].allAddressesAndKeys.unshift([currentAddress, currentPrivateKey]);
       // Add address to local storage, then set current address in local storage to new address
       chrome.storage.local.set(obj, function() {
-        // Load TestNet addresses with 0.99 BTC
+        // Load TestNet addresses with 0.0049 BTC
         if (network === 'testnet') {
-          Utilities.getTestNetCoins(currentAddress, 99000000, function() {
+          Utilities.getTestNetCoins(currentAddress, function(response) {
+            if (response.error) {
+              console.log(response.error);
+            }
             applyCurrentAddress(currentAddress);
             scope.renderBalances();
           });
